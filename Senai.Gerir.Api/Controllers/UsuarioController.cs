@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Senai.Gerir.Api.Dominios;
 using Senai.Gerir.Api.Interfaces;
 using Senai.Gerir.Api.Repositorios;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Senai.Gerir.Api.Controllers
 {
@@ -22,13 +22,11 @@ namespace Senai.Gerir.Api.Controllers
         }
 
         [HttpPost]
-        //retorno     nome do endpoint    (parâmetro)
         public IActionResult Cadastrar(Usuario usuario)
         {
             try
             {
                 _usuarioRepositorio.Cadastrar(usuario);
-
 
                 return Ok(usuario);
             }
@@ -36,25 +34,57 @@ namespace Senai.Gerir.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-           
         }
-        [HttpPost ("login")]
+
+        [HttpPost("login")]
         public IActionResult Logar(Usuario usuario)
         {
             try
             {
-                var usuarioexiste = _usuarioRepositorio.Logar(usuario.Email, usuario.Senha);
+                //Verifica se o usuário existe
+                var usuarioexiste = _usuarioRepositorio
+                                        .Logar(usuario.Email, usuario.Senha);
 
-                //caso o usuario não exista
+                //Caso não exista retorna NotFound
                 if (usuarioexiste == null)
                     return NotFound();
-                //caso exista
-                return Ok(usuarioexiste);
+
+                //Caso exista gera o token do usuário
+                var token = GerarJsonWebToken(usuarioexiste);
+
+                //retorna sucesso com o Token do Usuário
+                return Ok(token);
             }
             catch (System.Exception ex)
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        private string GerarJsonWebToken(Usuario usuario)
+        {
+            //Chave de Segurança
+            var chaveSeguranca = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("GerirChaveSeguranca"));
+            //Define as credenciais
+            var credenciais = new SigningCredentials(chaveSeguranca, SecurityAlgorithms.HmacSha256);
+
+            var data = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.FamilyName, usuario.Nome),
+                new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
+                new Claim(ClaimTypes.Role, usuario.Tipo),
+                new Claim(JwtRegisteredClaimNames.Jti, usuario.Id.ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                "gerir.com.br",
+                "gerir.com.br",
+                data,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: credenciais
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
