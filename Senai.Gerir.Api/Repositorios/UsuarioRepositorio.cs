@@ -15,8 +15,9 @@ namespace Senai.Gerir.Api.Repositorios
         public UsuarioRepositorio()
         {
             //Cria uma instância de GerirContext
-            _context = new GerirContext();
+            _context = new GerirContext();           
         }
+
 
         public Usuario BuscarPorId(Guid id)
         {

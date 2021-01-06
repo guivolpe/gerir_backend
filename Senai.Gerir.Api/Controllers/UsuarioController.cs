@@ -136,6 +136,8 @@ namespace Senai.Gerir.Api.Controllers
 
 
 
+
+
         private string GerarJsonWebToken(Usuario usuario)
         {
             //Chave de Segurança
