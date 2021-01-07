@@ -7,33 +7,47 @@ using System.Linq;
 
 namespace Senai.Gerir.Api.Repositorios
 {
-
     public class TarefaRepositorio : ITarefaRepositorio
     {
-        //Declaro um objeto do tipo GerirContext que será
-        //a representação do banco de dados
         private readonly GerirContext _context;
 
         public TarefaRepositorio()
         {
-            //Cria uma instância de GerirContext
             _context = new GerirContext();
         }
 
-
-
-        public Tarefa BuscarPorId(Guid id)
+        public Tarefa AlterarStatus(Guid IdTarefa)
         {
             try
             {
+                //Busca a tarefa pelo seu id
+                var tarefa = BuscarPorId(IdTarefa);
 
-                var tarefa = _context.Tarefas.Find(id);
+                //Altera o valor do status conforme estiver no banco
+                //Se estiver true o inverso é false
+                //Se estiver false o inverso é true
+                tarefa.Status = !tarefa.Status;
+
+                _context.Tarefas.Update(tarefa);
+                _context.SaveChanges();
+
                 return tarefa;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public Tarefa BuscarPorId(Guid IdTarefa)
+        {
+            try
+            {
+                return _context.Tarefas.Find(IdTarefa);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
 
@@ -41,9 +55,7 @@ namespace Senai.Gerir.Api.Repositorios
         {
             try
             {
-                //adiciona uma tarefa ao DbSet Usuarios do contexto
                 _context.Tarefas.Add(tarefa);
-                //Salva as alterações do contexto
                 _context.SaveChanges();
 
                 return tarefa;
@@ -56,96 +68,26 @@ namespace Senai.Gerir.Api.Repositorios
 
         public Tarefa Editar(Tarefa tarefa)
         {
-            try
-            {
-                //Busca tarefa no banco
-                var tarefaexiste = BuscarPorId(tarefa.Id);
-                //Verifica se tarefa existe
-                if (tarefaexiste == null)
-                    throw new Exception("Usuario não encontrado");
-
-                //Altera os valores do usuário
-                tarefaexiste.Titulo = tarefa.Titulo;
-                tarefaexiste.Descricao = tarefa.Descricao;
-                tarefaexiste.Categoria = tarefa.Categoria;
-                tarefaexiste.DataEntrega = tarefa.DataEntrega;
-                tarefaexiste.UsuarioId = tarefa.UsuarioId;
-
-
-                _context.Tarefas.Update(tarefaexiste);
-
-                //salva no BD
-                _context.SaveChanges();
-
-                return tarefaexiste;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
-
-        public List<Tarefa> ListarTodos(Guid IdUsuario)
-        {
-            try
-            {
-                var listaDeTarefas = _context.Tarefas.Where(tarefa => tarefa.UsuarioId == IdUsuario);
-                return (List<Tarefa>)listaDeTarefas;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
-
-        private object BuscarPorId(object id)
-        {
             throw new NotImplementedException();
         }
 
-        public void Remover(Guid Id)
+        public List<Tarefa> Listar(Guid IdUsuario)
         {
             try
             {
-                var tarefa = BuscarPorId(Id);
-                _context.Tarefas.Remove(tarefa);
-                _context.SaveChanges();
-
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
-        public Tarefa AlteraStatus(Guid idtarefa)
-
-        {
-            try
-            {
-                //Busca tarefa no banco
-                var tarefaexiste = BuscarPorId(idtarefa);
-                //Verifica se tarefa existe
-                if (tarefaexiste == null)
-                    throw new Exception("Usuario não encontrado");
-
-                //Altera os valores do usuário
-                tarefaexiste.Status = !tarefaexiste.Status;
-
-                _context.Tarefas.Update(tarefaexiste);
-
-                //salva no BD
-                _context.SaveChanges();
-
-                return tarefaexiste;
+                return _context.Tarefas.Where(
+                            c => c.UsuarioId == IdUsuario
+                            ).ToList();
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
+
+        public void Remover(Guid IdTarefa)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
-
